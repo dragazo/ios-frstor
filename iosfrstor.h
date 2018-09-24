@@ -11,12 +11,13 @@
 // copying is prohibited, but move semantics can be used to transfer restore contract ownership between instances.
 // ------------------
 // the data stored in the restoring contract includes: flags, width, precision, and fill.
-class iosfrstor
+template<typename charT, typename traits = std::char_traits<charT>>
+class basic_iosfrstor
 {
 private: // -- data -- //
 
 	// pointer to the stream to manage
-	std::ostream      *stream;
+	std::basic_ios<charT, traits> *stream;
 
 	// the stored format data
 	std::streamsize    precision;
@@ -30,11 +31,11 @@ private: // -- helpers -- //
 	// new format data is then copied for the specified stream object - null allowed for no contract.
 	// on success, a new contract is created (unless source was null, which always succeeds but does not create a contract).
 	// on failure, no contract is created, this instance is empty, and an exception is thrown.
-	inline void form_contract(std::ostream *_stream)
+	inline void form_contract(decltype(stream) _stream)
 	{
 		// discard current contract
 		stream = nullptr;
-		
+
 		// if source is non-null
 		if (_stream)
 		{
@@ -68,7 +69,7 @@ private: // -- helpers -- //
 	// transfers ownership of other's contract to us.
 	// WARNING: the source is assumed to not be this instance.
 	// WARNING: if this instance currently holds a contract, it is discarded
-	inline void transfer_contract(iosfrstor &&other) noexcept
+	inline void transfer_contract(basic_iosfrstor &&other) noexcept
 	{
 		// take on other's contract
 		stream = other.stream;
@@ -82,7 +83,7 @@ private: // -- helpers -- //
 	}
 
 	// swaps the contracts currently held by this instance and other
-	inline void swap_contract(iosfrstor &other) noexcept
+	inline void swap_contract(basic_iosfrstor &other) noexcept
 	{
 		using std::swap;
 
@@ -96,24 +97,24 @@ private: // -- helpers -- //
 public: // -- ctor / dtor / asgn -- //
 
 	// creates an iosfrstor that has no associated stream object (empty)
-	inline iosfrstor() noexcept : stream(nullptr) {}
+	inline basic_iosfrstor() noexcept : stream(nullptr) {}
 
 	// creates an iosfrstor object for the provided stream object
-	inline explicit iosfrstor(std::ostream &_stream) { form_contract(&_stream); }
+	inline explicit basic_iosfrstor(std::basic_ios<charT, traits> &_stream) { form_contract(&_stream); }
 
 	// upon destruction, completes any stored contract
-	inline ~iosfrstor() { complete_contract(); }
+	inline ~basic_iosfrstor() { complete_contract(); }
 
-	iosfrstor(const iosfrstor&) = delete;
-	iosfrstor &operator=(const iosfrstor&) = delete;
+	basic_iosfrstor(const basic_iosfrstor&) = delete;
+	basic_iosfrstor &operator=(const basic_iosfrstor&) = delete;
 
 	// creates an iosfrstor by transfering the contract from another instance.
 	// the moved-from instance is made empty.
-	inline iosfrstor(iosfrstor &&other) noexcept { transfer_contract(std::move(other)); }
+	inline basic_iosfrstor(basic_iosfrstor &&other) noexcept { transfer_contract(std::move(other)); }
 	// completes the current contract, then transfers other's contract to this instance.
 	// the moved-from instance is made empty.
 	// in the special case of self-assignment, does nothing.
-	inline iosfrstor &operator=(iosfrstor &&other) noexcept
+	inline basic_iosfrstor &operator=(basic_iosfrstor &&other) noexcept
 	{
 		if (this != &other)
 		{
@@ -138,7 +139,10 @@ public: // -- utility -- //
 	inline explicit operator bool() const noexcept { return stream; }
 
 	// swaps the contracts held by the two iosfrstor objects
-	inline friend void swap(iosfrstor &a, iosfrstor &b) noexcept { a.swap_contract(b); }
+	inline friend void swap(basic_iosfrstor &a, basic_iosfrstor &b) noexcept { a.swap_contract(b); }
 };
+
+// convenience typedef for normal stream types
+typedef basic_iosfrstor<char> iosfrstor;
 
 #endif
