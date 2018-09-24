@@ -9,12 +9,20 @@ int main()
 	iosfrstor a(std::cout);
 	iosfrstor b(std::cin);
 	
-	std::vector<iosfrstor> arr, arr2;
+	wiosfrstor c(std::wcout);
+	wiosfrstor d(std::wcin);
+	
+	std::vector<iosfrstor> arr;
+	std::vector<wiosfrstor> warr;
 
 	arr.emplace_back(std::cout);
 	arr.emplace_back(std::cin);
 
+	warr.emplace_back(std::wcout);
+	warr.emplace_back(std::wcin);
+
 	sizeof(iosfrstor);
+	sizeof(wiosfrstor);
 	
 	return 0;
 }

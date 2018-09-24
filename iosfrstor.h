@@ -23,7 +23,7 @@ private: // -- data -- //
 	std::streamsize    precision;
 	std::streamsize    width;
 	std::ios::fmtflags flags;
-	char               fill;
+	charT              fill;
 
 private: // -- helpers -- //
 
@@ -142,7 +142,8 @@ public: // -- utility -- //
 	inline friend void swap(basic_iosfrstor &a, basic_iosfrstor &b) noexcept { a.swap_contract(b); }
 };
 
-// convenience typedef for normal stream types
-typedef basic_iosfrstor<char> iosfrstor;
+// convenience typedefs for normal stream types
+typedef basic_iosfrstor<char>    iosfrstor;
+typedef basic_iosfrstor<wchar_t> wiosfrstor;
 
 #endif
