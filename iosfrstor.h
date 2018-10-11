@@ -135,6 +135,8 @@ public: // -- utility -- //
 
 	// returns true iff this instance currently holds a contract
 	inline explicit operator bool() const noexcept { return stream; }
+	// returns true iff this instance does not currently hold a contract
+	inline bool operator!() const noexcept { return !stream; }
 
 	// swaps the contracts held by the two iosfrstor objects
 	inline friend void swap(basic_iosfrstor &a, basic_iosfrstor &b) noexcept { a.swap_contract(b); }
