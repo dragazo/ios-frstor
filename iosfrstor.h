@@ -108,11 +108,9 @@ public: // -- ctor / dtor / asgn -- //
 	basic_iosfrstor(const basic_iosfrstor&) = delete;
 	basic_iosfrstor &operator=(const basic_iosfrstor&) = delete;
 
-	// creates an iosfrstor by transfering the contract from another instance.
-	// the moved-from instance is made empty.
+	// creates an iosfrstor by transfering the contract from another instance. the moved-from instance is made empty.
 	inline basic_iosfrstor(basic_iosfrstor &&other) noexcept { transfer_contract(std::move(other)); }
-	// completes the current contract, then transfers other's contract to this instance.
-	// the moved-from instance is made empty.
+	// completes the current contract, then transfers other's contract to this instance. the moved-from instance is made empty.
 	// in the special case of self-assignment, does nothing.
 	inline basic_iosfrstor &operator=(basic_iosfrstor &&other) noexcept
 	{
@@ -130,7 +128,7 @@ public: // -- utility -- //
 	inline void release() noexcept { stream = nullptr; }
 
 	// restores the formatting settings of the stream in the current contract without releasing the contract.
-	inline void rstor() noexcept { complete_contract(); }
+	inline void operator()() noexcept { complete_contract(); }
 
 	// returns true iff this instance does not currently hold a contract
 	inline bool empty() const noexcept { return !stream; }
