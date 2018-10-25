@@ -17,13 +17,13 @@ class basic_iosfrstor
 private: // -- data -- //
 
 	// pointer to the stream to manage
-	std::basic_ios<charT, traits> *stream;
+	std::basic_ios<charT, traits> *_stream;
 
 	// the stored format data
-	std::streamsize    precision;
-	std::streamsize    width;
-	std::ios::fmtflags flags;
-	charT              fill;
+	std::streamsize    _precision;
+	std::streamsize    _width;
+	std::ios::fmtflags _flags;
+	charT              _fill;
 
 private: // -- helpers -- //
 
@@ -31,37 +31,38 @@ private: // -- helpers -- //
 	// new format data is then copied for the specified stream object - null allowed for no contract.
 	// on success, a new contract is created (unless source was null, which always succeeds but does not create a contract).
 	// on failure, no contract is created, this instance is empty, and an exception is thrown.
-	inline void form_contract(decltype(stream) _stream)
+	inline void form_contract(std::basic_ios<charT, traits> *s)
 	{
 		// discard current contract
-		stream = nullptr;
+		_stream = nullptr;
 
 		// if source is non-null
-		if (_stream)
+		if (s)
 		{
 			// copy format data
-			precision = _stream->precision();
-			width = _stream->width();
-			flags = _stream->flags();
-			fill = _stream->fill();
+			_precision = s->precision();
+			_width = s->width();
+			_flags = s->flags();
+			_fill = s->fill();
 
 			// mark as valid contract (do this last so if anything above throws it won't try to restore undefined data)
-			stream = _stream;
+			_stream = s;
 		}
 	}
 
 	// completes the current contract, but DOES NOT MARK THIS INSTANCE AS EMPTY.
 	inline void complete_contract() noexcept
 	{
-		if (stream)
+		if (_stream)
 		{
 			try
 			{
-				stream->precision(precision);
-				stream->width(width);
-				stream->flags(flags);
-				stream->fill(fill);
+				_stream->precision(_precision);
+				_stream->width(_width);
+				_stream->flags(_flags);
+				_stream->fill(_fill);
 			}
+			// if for some reason those can/do throw, just ignore it
 			catch (...) {}
 		}
 	}
@@ -72,14 +73,14 @@ private: // -- helpers -- //
 	inline void transfer_contract(basic_iosfrstor &&other) noexcept
 	{
 		// take on other's contract
-		stream = other.stream;
-		precision = other.precision;
-		width = other.width;
-		flags = other.flags;
-		fill = other.fill;
+		_stream = other._stream;
+		_precision = other._precision;
+		_width = other._width;
+		_flags = other._flags;
+		_fill = other._fill;
 
 		// mark other as empty
-		other.stream = nullptr;
+		other._stream = nullptr;
 	}
 
 	// swaps the contracts currently held by this instance and other
@@ -87,20 +88,20 @@ private: // -- helpers -- //
 	{
 		using std::swap;
 
-		swap(stream, other.stream);
-		swap(precision, other.precision);
-		swap(width, other.width);
-		swap(flags, other.flags);
-		swap(fill, other.fill);
+		swap(_stream, other._stream);
+		swap(_precision, other._precision);
+		swap(_width, other._width);
+		swap(_flags, other._flags);
+		swap(_fill, other._fill);
 	}
 
 public: // -- ctor / dtor / asgn -- //
 
 	// creates an iosfrstor that has no associated stream object (empty)
-	inline basic_iosfrstor() noexcept : stream(nullptr) {}
+	inline basic_iosfrstor() noexcept : _stream(nullptr) {}
 
 	// creates an iosfrstor object for the provided stream object
-	inline explicit basic_iosfrstor(std::basic_ios<charT, traits> &_stream) { form_contract(&_stream); }
+	inline explicit basic_iosfrstor(std::basic_ios<charT, traits> &s) { form_contract(&s); }
 
 	// upon destruction, completes any stored contract
 	inline ~basic_iosfrstor() { complete_contract(); }
@@ -123,23 +124,44 @@ public: // -- ctor / dtor / asgn -- //
 
 public: // -- utility -- //
 
+	// if this object is non-empty, returns a pointer to the tied stream. otherwise returns null.
+	std::basic_ios<charT, traits> *get() const noexcept { return _stream; }
+
 	// releases the current contract from this instance without completing it.
 	// this instance is made empty.
-	inline void release() noexcept { stream = nullptr; }
+	void release() noexcept { _stream = nullptr; }
 
 	// restores the formatting settings of the stream in the current contract without releasing the contract.
-	inline void operator()() noexcept { complete_contract(); }
+	basic_iosfrstor &operator()() noexcept { complete_contract(); return *this; }
 
 	// returns true iff this instance does not currently hold a contract
-	inline bool empty() const noexcept { return !stream; }
+	bool empty() const noexcept { return !_stream; }
 
 	// returns true iff this instance currently holds a contract
-	inline explicit operator bool() const noexcept { return stream; }
+	explicit operator bool() const noexcept { return _stream; }
 	// returns true iff this instance does not currently hold a contract
-	inline bool operator!() const noexcept { return !stream; }
+	bool operator!() const noexcept { return !_stream; }
 
 	// swaps the contracts held by the two iosfrstor objects
-	inline friend void swap(basic_iosfrstor &a, basic_iosfrstor &b) noexcept { a.swap_contract(b); }
+	friend void swap(basic_iosfrstor &a, basic_iosfrstor &b) noexcept { a.swap_contract(b); }
+
+public: // -- stored-format access -- //
+
+	// gets or sets the stored precision value (new value will be used instead upon restoring formatting)
+	std::streamsize precision() const { return _precision; }
+	void precision(std::streamsize new_precision) { _precision = new_precision; }
+
+	// gets or sets the stored width value (new value will be used instead upon restoring formatting)
+	std::streamsize width() const { return _width; }
+	void width(std::streamsize new_width) { _width = new_width; }
+
+	// gets or sets the stored flags value (new value will be used instead upon restoring formatting)
+	std::ios::fmtflags flags() const { return _flags; }
+	void flags(std::ios::fmtflags new_flags) { _flags = new_flags; }
+
+	// gets or sets the stored fill value (new value will be used instead upon restoring formatting)
+	charT fill() const { return _fill; }
+	void fill(charT new_fill) { _fill = new_fill; }
 };
 
 // convenience typedefs for normal stream types
