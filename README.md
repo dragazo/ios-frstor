@@ -1,15 +1,11 @@
 # ios-frstor
-ios-frstor (i/o stream format restore) is a single C++ header that adds a RAII type called `basic_iosfrstor` for restoring stream formats based on a unique contract. `basic_iosfrstor` is a template class that takes a character type and a traits type *(just like standard streams do)*, which allows it to be extremely flexible in use.
+ios-frstor (i/o stream format restore) is a single C++ header that adds a RAII type called `basic_iosfrstor` for restoring stream formats. `basic_iosfrstor` is a template class that takes a character type and a traits type *(just like standard streams do)*, which allows it to be extremely flexible in use.
 
 Two typedefs are added for convenience: `iosfrstor` for use with *normal* streams and `wiosfrstor` for *wide* streams.
 
-An instance of `basic_iosfrstor` can be explicitly constructed from anything that inherits from `std::basic_ios` *(which includes all standard stream types)*, at which point it creates a contract with said stream object to restore its format data at the end of its lifetime. **The format data include: flags, width, precision, and fill.**
+If you want more manual control, there's also `basic_iosfmt` which holds all format settings for a stream and can be used to manually save and load said settings.
 
-The `basic_iosfrstor` type models a unique contract system (similar to `std::unique_ptr`). Copying is prohibited, but move semantics may be used to transfer ownership of the contract. An ADL swap function is present for exchanging contracts. The default constructor creates an instance with no contract.
-
-Methods are included to `release()` the contract (without completing it), to `rstor()` the stream formatting (without releasing the contract), and to check if it's `empty()` (no contract) (may also use `explicit operator bool()`).
-
-With the exception of the constructor, all methods are noexcept. If the constructor throws, no contract is formed.
+Two typedefs are added for convenience: `iosfmt` for use with *normal* streams and `wiosfmt` for *wide streams.
 
 ## Example of Use
 
